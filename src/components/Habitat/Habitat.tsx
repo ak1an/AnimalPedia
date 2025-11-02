@@ -143,11 +143,11 @@ const Habitat: React.FC = () => {
   };
 
   return (
-    <section id="habitat-section" className="py-12 bg-white dark:bg-gray-900 transition-colors duration-300">
+    <section id="habitat-section" className="py-12">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">Среда обитания</h2>
-          <p className="text-gray-600 dark:text-gray-400">
+          <h2 className="text-3xl font-bold nature-text mb-2">Среда обитания</h2>
+          <p className="nature-text-light">
             Исследуйте животных в их естественной среде обитания
           </p>
         </div>
@@ -158,19 +158,19 @@ const Habitat: React.FC = () => {
             const previewAnimals = getPreviewAnimals(habitat.name);
             
             return (
-              <div key={habitat.name} className="bg-gray-50 dark:bg-gray-800 rounded-2xl p-6">
+              <div key={habitat.name} className="nature-card">
                 {/* Habitat Header */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
                   <div className="flex items-center mb-4 md:mb-0">
                     <div className={`p-3 rounded-full bg-gradient-to-br ${habitat.color} dark:${habitat.darkColor} text-white mr-4`}>
                       {habitat.icon}
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-800 dark:text-white">{habitat.name}</h3>
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white">{habitat.name}</h3>
                   </div>
                   
                   <button
                     onClick={() => navigateToHabitatFilter(habitat.name)}
-                    className="mt-4 md:mt-0 px-4 py-2 bg-gradient-to-r from-green-400 to-blue-500 text-white rounded-full shadow-md hover:scale-105 transition-all duration-300"
+                    className="nature-button mt-4 md:mt-0"
                   >
                     Показать больше
                   </button>
@@ -182,7 +182,7 @@ const Habitat: React.FC = () => {
                     {[1, 2, 3, 4, 5].map((item) => (
                       <div 
                         key={item} 
-                        className="rounded-2xl shadow-xl bg-white animate-pulse"
+                        className="nature-card animate-pulse"
                       >
                         <div className="bg-gray-300 dark:bg-gray-700 h-48 w-full rounded-t-2xl"></div>
                         <div className="p-4">
@@ -197,7 +197,7 @@ const Habitat: React.FC = () => {
                     {previewAnimals.map((animal, index) => (
                       <motion.div 
                         key={animal.id}
-                        className="rounded-2xl shadow-xl bg-white hover:scale-105 transition-all duration-300 flex flex-col h-full"
+                        className="nature-card hover:scale-105 transition-all duration-300 flex flex-col h-full"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -213,7 +213,7 @@ const Habitat: React.FC = () => {
                         </div>
                         
                         <div className="p-4 flex-grow flex flex-col">
-                          <h4 className="text-lg font-bold text-gray-800 dark:text-white mb-2">{animal.name}</h4>
+                          <h4 className="text-lg font-bold text-gray-900 dark:text-white mb-2">{animal.name}</h4>
                           <p className="text-gray-600 dark:text-gray-400 text-sm flex-grow">{animal.short}</p>
                         </div>
                       </motion.div>

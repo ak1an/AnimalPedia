@@ -97,10 +97,10 @@ const CategoriesPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
-      <div className="container mx-auto px-4">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8 sm:py-12 transition-colors duration-300">
+      <div className="container mx-auto px-2 sm:px-4">
         <motion.h1 
-          className="text-4xl font-bold text-center text-gray-800 dark:text-white mb-4"
+          className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-gray-800 dark:text-white mb-3 sm:mb-4 transition-colors duration-300"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 } as Transition}
@@ -108,7 +108,7 @@ const CategoriesPage: React.FC = () => {
           Категории животных
         </motion.h1>
         <motion.p 
-          className="text-center text-gray-600 dark:text-gray-400 mb-12 max-w-2xl mx-auto"
+          className="text-center text-gray-600 dark:text-gray-400 mb-8 sm:mb-12 max-w-2xl mx-auto text-sm sm:text-base transition-colors duration-300"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 } as Transition}
@@ -125,7 +125,7 @@ const CategoriesPage: React.FC = () => {
         >
           {/* Top row - 4 items */}
           <motion.div 
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8 w-full max-w-6xl"
+            className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-4 sm:mb-6 w-full max-w-6xl"
             variants={itemVariants}
           >
             {categories.slice(0, 4).map((category) => (
@@ -140,7 +140,7 @@ const CategoriesPage: React.FC = () => {
           
           {/* Bottom row - 3 items, centered */}
           <motion.div 
-            className="grid grid-cols-1 sm:grid-cols-3 gap-8 w-full max-w-4xl justify-center"
+            className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 w-full max-w-4xl justify-center"
             variants={itemVariants}
           >
             {categories.slice(4).map((category) => (

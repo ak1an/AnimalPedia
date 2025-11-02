@@ -149,11 +149,11 @@ const AnimalDetails: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 transition-colors duration-300">
         <div className="container mx-auto px-4">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">Загрузка информации о животном...</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-400 transition-colors duration-300">Загрузка информации о животном...</p>
           </div>
         </div>
       </div>
@@ -162,11 +162,11 @@ const AnimalDetails: React.FC = () => {
 
   if (!animal) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 transition-colors duration-300">
         <div className="container mx-auto px-4">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 text-center">
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Животное не найдено</h1>
-            <p className="text-gray-600 dark:text-gray-400">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-8 text-center transition-colors duration-300">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 transition-colors duration-300">Животное не найдено</h1>
+            <p className="text-gray-600 dark:text-gray-400 transition-colors duration-300">
               К сожалению, информация о животном с ID "{id}" не найдена.
             </p>
           </div>
@@ -193,115 +193,105 @@ const AnimalDetails: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 transition-colors duration-300">
       <div className="container mx-auto px-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden transition-colors duration-300">
           {/* Animal Header */}
           <div className="relative">
             <img 
               src={animal.photo} 
               alt={animal.name} 
-              className="w-full h-96 object-cover"
+              className="w-full h-96 object-cover transition-opacity duration-300"
             />
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
-              <h1 className="text-4xl font-bold text-white">{animal.name}</h1>
-              <p className="text-xl text-gray-200">{animal.habitat}</p>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+            <div className="absolute bottom-0 left-0 p-8 text-white">
+              <h1 className="text-4xl font-bold mb-2 transition-colors duration-300">{animal.name}</h1>
+              <p className="text-xl transition-colors duration-300">
+                <span className="font-semibold">Категория:</span> {getCategoryName(animal.category)}
+              </p>
+              <p className="text-xl transition-colors duration-300">
+                <span className="font-semibold">Среда обитания:</span> {animal.habitat}
+              </p>
             </div>
           </div>
 
           {/* Animal Details */}
-          <div className="p-6">
-            <div className="flex flex-wrap justify-between items-start mb-6">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">Описание</h2>
-                <p className="text-gray-600 dark:text-gray-300 text-lg">{animalDescription}</p>
-              </div>
-              
-              <div className="flex space-x-3 mt-4 md:mt-0">
-                <button 
-                  onClick={handleLike}
-                  className="p-3 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-red-100 dark:hover:bg-red-900 transition-all duration-200 transform hover:scale-110"
-                  aria-label={isLiked ? "Убрать лайк" : "Поставить лайк"}
-                >
-                  {isLiked ? (
-                    <FaHeart className="text-red-500 text-xl" />
-                  ) : (
-                    <FaRegHeart className="text-gray-500 dark:text-gray-400 text-xl" />
-                  )}
-                </button>
-                
-                <button 
-                  onClick={handleFavorite}
-                  className="p-3 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-yellow-100 dark:hover:bg-yellow-900 transition-all duration-200 transform hover:scale-110"
-                  aria-label={isFavorited ? "Убрать из избранного" : "Добавить в избранное"}
-                >
-                  {isFavorited ? (
-                    <FaStar className="text-yellow-500 text-xl" />
-                  ) : (
-                    <FaRegStar className="text-gray-500 dark:text-gray-400 text-xl" />
-                  )}
-                </button>
-              </div>
+          <div className="p-8 transition-colors duration-300">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 transition-colors duration-300">Описание</h2>
+              <p className="text-gray-700 dark:text-gray-300 text-lg leading-relaxed transition-colors duration-300">
+                {animalDescription}
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {/* Habitat */}
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
-                  <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-                  Место обитания
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300">{animal.habitat}</p>
+            {/* Additional Information */}
+            {(animal.diet || animal.sleep || (animal.facts && animal.facts.length > 0)) && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+                {animal.diet && (
+                  <div className="bg-gray-100 dark:bg-gray-700 p-6 rounded-xl transition-colors duration-300">
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3 transition-colors duration-300">Питание</h3>
+                    <p className="text-gray-700 dark:text-gray-300 transition-colors duration-300">{animal.diet}</p>
+                  </div>
+                )}
+                {animal.sleep && (
+                  <div className="bg-gray-100 dark:bg-gray-700 p-6 rounded-xl transition-colors duration-300">
+                    <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3 transition-colors duration-300">Образ жизни</h3>
+                    <p className="text-gray-700 dark:text-gray-300 transition-colors duration-300">{animal.sleep}</p>
+                  </div>
+                )}
               </div>
+            )}
 
-              {/* Diet */}
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
-                  <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-                  Рацион
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300">{animal.diet || "Информация отсутствует"}</p>
-              </div>
-
-              {/* Sleep */}
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
-                  <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-                  Сон
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300">{animal.sleep || "Информация отсутствует"}</p>
-              </div>
-
-              {/* Category */}
-              <div className="bg-gray-50 dark:bg-gray-700 rounded-xl p-6">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
-                  <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-                  Категория
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 capitalize">
-                  {getCategoryName(animal.category)}
-                </p>
-              </div>
-            </div>
-
-            {/* Interesting Facts */}
-            <div className="mt-8 bg-gradient-to-r from-green-50 to-amber-50 dark:from-gray-700 dark:to-gray-700 rounded-xl p-6">
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 flex items-center">
-                <span className="w-3 h-3 bg-green-500 rounded-full mr-2"></span>
-                Интересные факты
-              </h3>
-              {animal.facts && animal.facts.length > 0 ? (
+            {/* Facts */}
+            {animal.facts && animal.facts.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-4 transition-colors duration-300">Интересные факты</h3>
                 <ul className="space-y-3">
                   {animal.facts.map((fact, index) => (
-                    <li key={index} className="flex items-start">
-                      <span className="text-green-500 mr-2 mt-1">•</span>
-                      <span className="text-gray-600 dark:text-gray-300">{fact}</span>
+                    <li 
+                      key={index} 
+                      className="flex items-start bg-gray-100 dark:bg-gray-700 p-4 rounded-lg transition-colors duration-300"
+                    >
+                      <span className="text-green-500 mr-2 text-xl">•</span>
+                      <span className="text-gray-700 dark:text-gray-300 transition-colors duration-300">{fact}</span>
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p className="text-gray-600 dark:text-gray-300">Интересные факты отсутствуют</p>
-              )}
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-4 pt-6 border-t border-gray-200 dark:border-gray-700 transition-colors duration-300">
+              <button 
+                onClick={handleLike}
+                className={`flex items-center px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
+                  isLiked 
+                    ? 'bg-yellow-500 text-white hover:bg-yellow-600' 
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                <FaStar className={`mr-2 ${isLiked ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`} />
+                {isLiked ? 'Лайкнут' : 'Лайк'}
+              </button>
+              
+              <button 
+                onClick={handleFavorite}
+                className={`flex items-center px-6 py-3 rounded-full font-semibold transition-all duration-300 ${
+                  isFavorited 
+                    ? 'bg-red-500 text-white hover:bg-red-600' 
+                    : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600'
+                }`}
+              >
+                <FaHeart className={`mr-2 ${isFavorited ? 'text-white' : 'text-gray-500 dark:text-gray-400'}`} />
+                {isFavorited ? 'В избранном' : 'В избранное'}
+              </button>
+              
+              <button 
+                onClick={() => window.history.back()}
+                className="nature-button px-6 py-3 rounded-full font-semibold transition-all duration-300"
+              >
+                Назад
+              </button>
             </div>
           </div>
         </div>

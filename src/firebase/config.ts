@@ -1,12 +1,9 @@
-// Import the functions you need from the SDKs you need
-import { initializeApp } from 'firebase/app';
-import { getAnalytics } from 'firebase/analytics';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import { getDatabase } from 'firebase/database';
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+import { getAuth } from "firebase/auth";
+import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
+import { getDatabase } from "firebase/database";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyBcFCpB09KcJsUfC54jZj83oDjrnbRjyQ8",
   authDomain: "animallpedia.firebaseapp.com",
@@ -15,34 +12,45 @@ const firebaseConfig = {
   messagingSenderId: "911946213967",
   appId: "1:911946213967:web:9d7afe560956096117983a",
   measurementId: "G-DWFRPC0H6E",
-  databaseURL: "https://animallpedia-default-rtdb.firebaseio.com/"
+  databaseURL: "https://animallpedia-default-rtdb.firebaseio.com/",
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase Analytics (only in browser environment)
 let analytics;
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   analytics = getAnalytics(app);
 }
 
-// Initialize Firebase Authentication and get a reference to the service
-// This will be used for user authentication (sign up, sign in, sign out, etc.)
 const auth = getAuth(app);
-
-// Initialize Cloud Firestore and get a reference to the service
-// This will be used for database operations (reading, writing, updating data)
 const db = getFirestore(app);
 
-// Initialize Firebase Realtime Database and get a reference to the service
-// This will be used for realtime database operations
+// Enable IndexedDB persistence safely without multi-tab synchronization
+// This prevents the INTERNAL ASSERTION FAILED errors
+if (typeof window !== "undefined" && "indexedDB" in window) {
+  // Use a flag to ensure persistence is only attempted once
+  const persistenceInitialized = (window as any).__FIRESTORE_PERSISTENCE_INITIALIZED__;
+  
+  if (!persistenceInitialized) {
+    enableIndexedDbPersistence(db)
+      .then(() => {
+        (window as any).__FIRESTORE_PERSISTENCE_INITIALIZED__ = true;
+        console.log("Firestore persistence enabled");
+      })
+      .catch((err) => {
+        (window as any).__FIRESTORE_PERSISTENCE_INITIALIZED__ = true;
+        if (err.code === "failed-precondition") {
+          console.warn("Firestore persistence failed: multiple tabs open");
+        } else if (err.code === "unimplemented") {
+          console.warn("Firestore persistence not available in this browser");
+        } else {
+          console.error("Unexpected Firestore persistence error:", err);
+        }
+      });
+  }
+}
+
 const rtdb = getDatabase(app);
 
-// Export all services for use in the application
-// app: The main Firebase app instance
-// analytics: Firebase Analytics service for tracking user interactions
-// auth: Firebase Authentication service for user management
-// db: Firestore database service for data storage and retrieval
-// rtdb: Realtime Database service for realtime data storage and retrieval
 export { app, analytics, auth, db, rtdb };

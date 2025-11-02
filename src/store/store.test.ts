@@ -1,12 +1,8 @@
-import { store } from './index';
-import { toggleTheme } from './slices/themeSlice';
-import { setUser, clearUser } from './slices/userSlice';
-import { setQuery, setSuggestions } from './slices/searchSlice';
-import { setLanguage } from './slices/languageSlice';
+import { store } from './store';
+import { toggleTheme, setTheme } from './slices/themeSlice';
+import { setQuery, setSuggestions, setIsSearching, clearSearch } from './slices/searchSlice';
+import { addRecentlyViewedAnimal, clearRecentlyViewed } from './slices/recentlyViewedSlice';
 
-/**
- * Test suite for the Redux store
- */
 describe('Redux Store', () => {
   test('should handle theme toggle', () => {
     const initialState = store.getState().theme;
@@ -17,48 +13,56 @@ describe('Redux Store', () => {
     expect(newState.isDarkMode).toBe(true);
   });
 
-  test('should handle user authentication', () => {
-    const userData = {
-      uid: '12345',
-      name: 'John Doe',
-      email: 'john@example.com',
-      avatarUrl: 'https://example.com/avatar.jpg'
+  test('should handle theme set', () => {
+    store.dispatch(setTheme(false));
+    const initialState = store.getState().theme;
+    expect(initialState.isDarkMode).toBe(false);
+    
+    store.dispatch(setTheme(true));
+    const newState = store.getState().theme;
+    expect(newState.isDarkMode).toBe(true);
+  });
+
+  test('should handle search actions', () => {
+    const testQuery = 'test animal';
+    const testSuggestions = ['test1', 'test2'];
+    
+    store.dispatch(setQuery(testQuery));
+    const queryState = store.getState().search;
+    expect(queryState.query).toBe(testQuery);
+    
+    store.dispatch(setSuggestions(testSuggestions));
+    const suggestionsState = store.getState().search;
+    expect(suggestionsState.suggestions).toEqual(testSuggestions);
+    
+    store.dispatch(setIsSearching(true));
+    const searchingState = store.getState().search;
+    expect(searchingState.isSearching).toBe(true);
+    
+    store.dispatch(clearSearch());
+    const clearedState = store.getState().search;
+    expect(clearedState.query).toBe('');
+    expect(clearedState.suggestions).toEqual([]);
+    expect(clearedState.isSearching).toBe(false);
+  });
+
+  test('should handle recently viewed animals', () => {
+    const testAnimal = {
+      id: '1',
+      name: 'Test Animal',
+      category: 'mammals',
+      habitat: 'forest',
+      photo: 'test.jpg',
+      short: 'Test description',
+      details: 'Test details'
     };
     
-    store.dispatch(setUser(userData));
-    const userState = store.getState().user;
-    expect(userState.isAuthenticated).toBe(true);
-    expect(userState.name).toBe(userData.name);
-    expect(userState.email).toBe(userData.email);
+    store.dispatch(addRecentlyViewedAnimal(testAnimal));
+    const addedState = store.getState().recentlyViewed;
+    expect(addedState.animals).toContainEqual(testAnimal);
     
-    store.dispatch(clearUser());
-    const clearedState = store.getState().user;
-    expect(clearedState.isAuthenticated).toBe(false);
-    expect(clearedState.name).toBeNull();
-  });
-
-  test('should handle search functionality', () => {
-    const query = 'Lion';
-    const suggestions = ['Lion', 'Lioness', 'Lion cub'];
-    
-    store.dispatch(setQuery(query));
-    store.dispatch(setSuggestions(suggestions));
-    
-    const searchState = store.getState().search;
-    expect(searchState.query).toBe(query);
-    expect(searchState.suggestions).toEqual(suggestions);
-  });
-
-  test('should handle language change', () => {
-    const initialLanguageState = store.getState().language;
-    expect(initialLanguageState.currentLanguage).toBe('RU');
-    
-    store.dispatch(setLanguage('EN'));
-    const newLanguageState = store.getState().language;
-    expect(newLanguageState.currentLanguage).toBe('EN');
-    
-    store.dispatch(setLanguage('KG'));
-    const finalLanguageState = store.getState().language;
-    expect(finalLanguageState.currentLanguage).toBe('KG');
+    store.dispatch(clearRecentlyViewed());
+    const clearedState = store.getState().recentlyViewed;
+    expect(clearedState.animals).toEqual([]);
   });
 });

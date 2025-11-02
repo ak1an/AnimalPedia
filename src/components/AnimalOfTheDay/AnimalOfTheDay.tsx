@@ -17,6 +17,12 @@ interface AnimalItem {
   imageUrl: string;
 }
 
+// Define the stored data type
+interface StoredAnimalData {
+  date: string;
+  animal: AnimalItem;
+}
+
 /**
  * AnimalOfTheDay component for AnimalPedia homepage
  * Displays a daily animal with automatic updates
@@ -24,6 +30,7 @@ interface AnimalItem {
 const AnimalOfTheDay: React.FC = () => {
   const dispatch = useDispatch();
   const user = useSelector((state: RootState) => state.user);
+  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const [animal, setAnimal] = useState<AnimalItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [isFavorite, setIsFavorite] = useState(false);
@@ -78,6 +85,15 @@ const AnimalOfTheDay: React.FC = () => {
     }
   ];
 
+  // Function to get current date in YYYY-MM-DD format
+  const getCurrentDate = (): string => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   // Function to select a random animal
   const selectRandomAnimal = (animalsArray: AnimalItem[]): AnimalItem => {
     const randomIndex = Math.floor(Math.random() * animalsArray.length);
@@ -104,7 +120,51 @@ const AnimalOfTheDay: React.FC = () => {
     const loadAnimal = async () => {
       try {
         setLoading(true);
+        
+        // Check if we have stored data for today
+        const storedData = localStorage.getItem('animalOfTheDay');
+        const currentDate = getCurrentDate();
+        
+        if (storedData) {
+          const parsedData: StoredAnimalData = JSON.parse(storedData);
+          
+          // If stored data is from today, use it
+          if (parsedData.date === currentDate) {
+            setAnimal(parsedData.animal);
+            
+            // Add animal to recently viewed
+            const animalForRecentlyViewed = {
+              id: parsedData.animal.id.toString(),
+              name: parsedData.animal.name,
+              category: "animalOfTheDay",
+              habitat: parsedData.animal.habitat,
+              photo: parsedData.animal.imageUrl,
+              short: parsedData.animal.fact,
+              details: parsedData.animal.description
+            };
+            dispatch(addRecentlyViewedAnimal(animalForRecentlyViewed));
+            
+            // Set initial favorite status based on user's favorites
+            if (user.isAuthenticated && user.favoriteAnimals.includes(parsedData.animal.id.toString())) {
+              setIsFavorite(true);
+            } else {
+              setIsFavorite(false);
+            }
+            
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // If no stored data or data is outdated, fetch new animal
         const animalData = await fetchAnimal();
+        
+        // Store the new animal with today's date
+        const dataToStore: StoredAnimalData = {
+          date: currentDate,
+          animal: animalData
+        };
+        localStorage.setItem('animalOfTheDay', JSON.stringify(dataToStore));
         
         // Add animal to recently viewed
         const animalForRecentlyViewed = {
@@ -197,27 +257,27 @@ const AnimalOfTheDay: React.FC = () => {
 
   if (loading) {
     return (
-      <section className="py-12 bg-white dark:bg-gray-900 transition-colors duration-300">
+      <section className={`py-12 transition-colors duration-300 ease-in-out ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">Животное дня</h2>
+            <h2 className={`text-3xl font-bold mb-2 transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-white' : 'nature-text'}`}>Животное дня</h2>
           </div>
           
-          <div className="max-w-4xl mx-auto bg-gradient-to-r from-green-50 to-amber-50 dark:from-gray-800 dark:to-gray-800 rounded-xl shadow-lg overflow-hidden animate-pulse">
+          <div className="max-w-4xl mx-auto nature-card animate-pulse">
             <div className="md:flex">
               <div className="md:w-2/5">
-                <div className="bg-gray-300 dark:bg-gray-700 h-64 w-full"></div>
+                <div className={`h-64 w-full rounded-t-lg md:rounded-l-lg md:rounded-t-none ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
               </div>
               <div className="md:w-3/5 p-8 flex flex-col justify-center">
-                <div className="h-8 bg-gray-300 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
-                <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full mb-3"></div>
-                <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full mb-3"></div>
-                <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-2/3 mb-6"></div>
-                <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full mb-3"></div>
-                <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-3/4 mb-6"></div>
+                <div className={`h-8 rounded w-3/4 mb-4 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                <div className={`h-4 rounded w-full mb-3 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                <div className={`h-4 rounded w-full mb-3 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                <div className={`h-4 rounded w-2/3 mb-6 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                <div className={`h-4 rounded w-full mb-3 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                <div className={`h-4 rounded w-3/4 mb-6 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
                 <div className="flex space-x-4">
-                  <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded w-32"></div>
-                  <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded w-32"></div>
+                  <div className={`h-10 rounded w-32 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                  <div className={`h-10 rounded w-32 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
                 </div>
               </div>
             </div>
@@ -228,37 +288,37 @@ const AnimalOfTheDay: React.FC = () => {
   }
 
   return (
-    <section className="py-12 bg-white dark:bg-gray-900 transition-colors duration-300">
+    <section className={`py-12 transition-colors duration-300 ease-in-out ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">Животное дня</h2>
+          <h2 className={`text-3xl font-bold mb-2 transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-white' : 'nature-text'}`}>Животное дня</h2>
         </div>
         
-        <div className="max-w-4xl mx-auto bg-gradient-to-r from-green-50 to-amber-50 dark:from-gray-800 dark:to-gray-800 rounded-xl shadow-lg overflow-hidden animate-fade-in">
+        <div className="max-w-4xl mx-auto nature-card animate-fade-in">
           <div className="md:flex">
             <div className="md:w-2/5">
               <img 
                 src={animal?.imageUrl} 
                 alt={animal?.name} 
-                className="w-full h-64 md:h-full object-cover animate-fade-in-up"
+                className="w-full h-64 md:h-full object-cover rounded-t-lg md:rounded-l-lg md:rounded-t-none animate-fade-in-up"
               />
             </div>
             <div className="md:w-3/5 p-8 flex flex-col">
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-2 animate-fade-in-up">
+              <h3 className={`text-2xl font-bold mb-2 animate-fade-in-up transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>
                 {animal?.name}
               </h3>
               
               <div className="mb-4 animate-fade-in-up delay-100">
-                <div className="flex items-center text-gray-600 dark:text-gray-400 mb-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className={`flex items-center mb-1 transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span>{animal?.habitat}</span>
                 </div>
                 
                 {animal?.redBookStatus && (
-                  <div className="flex items-center text-gray-600 dark:text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className={`flex items-center transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                     <span>{animal.redBookStatus}</span>
@@ -266,17 +326,19 @@ const AnimalOfTheDay: React.FC = () => {
                 )}
               </div>
               
-              <p className="text-gray-700 dark:text-gray-300 mb-6 animate-fade-in-up delay-200">
+              <p className={`mb-6 animate-fade-in-up delay-200 transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                 {animal?.fact}
               </p>
               
               <div className="flex flex-wrap gap-4 mt-auto animate-fade-in-up delay-300">
                 <button 
                   onClick={toggleFavorite}
-                  className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                  className={`nature-button flex items-center px-4 py-2 rounded-lg transition-colors duration-200 ${
                     isFavorite 
-                      ? 'bg-red-500 hover:bg-red-600 text-white' 
-                      : 'bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-600'
+                      ? 'bg-red-500 hover:bg-red-600' 
+                      : isDarkMode 
+                        ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+                        : 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-300'
                   }`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill={isFavorite ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
@@ -287,7 +349,7 @@ const AnimalOfTheDay: React.FC = () => {
                 
                 <button 
                   onClick={openModal}
-                  className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
+                  className="nature-button flex items-center"
                 >
                   Подробнее
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -303,16 +365,20 @@ const AnimalOfTheDay: React.FC = () => {
       {/* Modal for displaying full animal info */}
       {isModalOpen && animal && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-modal-pop">
+          <div className="nature-card max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-modal-pop rounded-2xl">
             <div className="relative">
               <img 
                 src={animal.imageUrl} 
                 alt={animal.name} 
-                className="w-full h-64 object-cover"
+                className="w-full h-64 object-cover rounded-t-2xl"
               />
               <button 
                 onClick={closeModal}
-                className="absolute top-4 right-4 bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-full p-2 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                className={`absolute top-4 right-4 rounded-full p-2 shadow-lg hover:bg-opacity-80 transition-colors duration-200 ${
+                  isDarkMode 
+                    ? 'bg-gray-700 text-white' 
+                    : 'bg-white text-gray-800'
+                }`}
                 aria-label="Закрыть"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -322,19 +388,19 @@ const AnimalOfTheDay: React.FC = () => {
             </div>
             
             <div className="p-6">
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">{animal.name}</h3>
+              <h3 className={`text-2xl font-bold mb-4 transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{animal.name}</h3>
               
               <div className="mb-6">
-                <div className="flex items-center text-gray-600 dark:text-gray-400 mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-green-600 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className={`flex items-center mb-2 transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span><strong>Место обитания:</strong> {animal.habitat}</span>
                 </div>
                 
                 {animal.redBookStatus && (
-                  <div className="flex items-center text-gray-600 dark:text-gray-400">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-red-600 dark:text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <div className={`flex items-center transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                     <span><strong>Статус в Красной книге:</strong> {animal.redBookStatus}</span>
@@ -343,22 +409,24 @@ const AnimalOfTheDay: React.FC = () => {
               </div>
               
               <div className="mb-6">
-                <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">Интересный факт</h4>
-                <p className="text-gray-600 dark:text-gray-300">{animal.fact}</p>
+                <h4 className={`text-lg font-semibold mb-2 transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Интересный факт</h4>
+                <p className={`transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{animal.fact}</p>
               </div>
               
               <div>
-                <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">Описание</h4>
-                <p className="text-gray-600 dark:text-gray-300 whitespace-pre-line">{animal.description}</p>
+                <h4 className={`text-lg font-semibold mb-2 transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>Описание</h4>
+                <p className={`whitespace-pre-line transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{animal.description}</p>
               </div>
               
               <div className="mt-6 flex justify-end">
                 <button 
                   onClick={toggleFavorite}
-                  className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+                  className={`nature-button flex items-center px-4 py-2 rounded-lg transition-colors duration-200 ${
                     isFavorite 
-                      ? 'bg-red-500 hover:bg-red-600 text-white' 
-                      : 'bg-white dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-800 dark:text-white border border-gray-300 dark:border-gray-600'
+                      ? 'bg-red-500 hover:bg-red-600' 
+                      : isDarkMode 
+                        ? 'bg-gray-700 hover:bg-gray-600 text-white' 
+                        : 'bg-white hover:bg-gray-100 text-gray-800 border border-gray-300'
                   }`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill={isFavorite ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">

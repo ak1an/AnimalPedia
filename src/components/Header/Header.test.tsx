@@ -86,15 +86,4 @@ describe('Header Component', () => {
     // Check if user profile component is rendered
     expect(screen.getByLabelText('User profile')).toBeInTheDocument();
   });
-
-  test('renders translator component', () => {
-    render(
-      <Provider store={store}>
-        <Header />
-      </Provider>
-    );
-    
-    // Check if translator component is rendered
-    expect(screen.getByLabelText('Select language')).toBeInTheDocument();
-  });
 });

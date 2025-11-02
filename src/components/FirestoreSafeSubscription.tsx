@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   collection, 
   doc, 
-  onSnapshot, 
   query, 
   orderBy, 
-  where,
-  enableIndexedDbPersistence,
-  FirestoreError
+  where
 } from 'firebase/firestore';
+import { 
+  safeSubscribeToCollection, 
+  safeSubscribeToDocument,
+  safeSubscribeToQuery
+} from '../utils/firestoreSafeSubscriptions';
 import { db } from '../firebase/config';
 
 // Define types for our data
@@ -33,88 +35,37 @@ interface User {
   favoriteAnimals: string[];
 }
 
-// Initialize Firestore persistence safely
-const initializePersistence = async () => {
-  try {
-    // Only initialize persistence in browser environment
-    if (typeof window !== 'undefined' && 'indexedDB' in window) {
-      await enableIndexedDbPersistence(db);
-      console.log('Firestore persistence enabled');
-    }
-  } catch (error) {
-    const firestoreError = error as FirestoreError;
-    if (firestoreError.code === 'failed-precondition') {
-      // Multiple tabs open, persistence can only be enabled in one tab at a time
-      console.warn('Firestore persistence failed: Multiple tabs open');
-    } else if (firestoreError.code === 'unimplemented') {
-      // The current browser doesn't support persistence
-      console.warn('Firestore persistence not supported in this browser');
-    } else {
-      console.error('Firestore persistence error:', error);
-    }
-  }
-};
-
-// Initialize persistence when the module loads
-initializePersistence();
-
 // Safe Firestore subscription hook
 const useFirestoreSubscription = <T,>(
-  subscribe: () => () => void,
+  subscribeFn: () => (() => void),
   deps: React.DependencyList = []
 ) => {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const unsubscribeRef = useRef<(() => void) | null>(null);
-  const isMountedRef = useRef(true);
 
   useEffect(() => {
-    // Clean up previous subscription if it exists
-    if (unsubscribeRef.current) {
-      unsubscribeRef.current();
-      unsubscribeRef.current = null;
-    }
-
     // Reset state when dependencies change
     setLoading(true);
     setError(null);
+    setData(null);
 
     try {
-      // Create new subscription
-      unsubscribeRef.current = subscribe();
+      // Create new subscription using the provided function
+      const unsubscribe = subscribeFn();
+      
+      // Return cleanup function
+      return () => {
+        unsubscribe();
+      };
     } catch (err) {
       console.error('Subscription error:', err);
       setError('Failed to subscribe to data');
       setLoading(false);
     }
-
-    // Cleanup function
-    return () => {
-      isMountedRef.current = false;
-      if (unsubscribeRef.current) {
-        unsubscribeRef.current();
-        unsubscribeRef.current = null;
-      }
-    };
   }, deps);
 
-  // Wrapper function to update state safely
-  const safeSetData = useCallback((newData: T) => {
-    if (isMountedRef.current) {
-      setData(newData);
-      setLoading(false);
-    }
-  }, []);
-
-  const safeSetError = useCallback((errorMessage: string) => {
-    if (isMountedRef.current) {
-      setError(errorMessage);
-      setLoading(false);
-    }
-  }, []);
-
-  return { data, loading, error, setData: safeSetData, setError: safeSetError };
+  return { data, loading, error, setData, setError };
 };
 
 // Example component using safe Firestore subscriptions
@@ -126,25 +77,19 @@ const FirestoreSafeSubscriptionExample: React.FC = () => {
     error: animalsError
   } = useFirestoreSubscription<Animal[]>(
     () => {
-      const q = query(
-        collection(db, 'animals'),
-        orderBy('name')
-      );
-      
-      return onSnapshot(
-        q,
-        (snapshot) => {
-          const animalsData: Animal[] = [];
-          snapshot.forEach((doc) => {
-            animalsData.push({
-              id: doc.id,
-              ...(doc.data() as Omit<Animal, 'id'>)
-            });
-          });
-          console.log('Animals updated:', animalsData);
+      return safeSubscribeToCollection<Animal>(
+        'animals',
+        (data) => {
+          console.log('Animals updated:', data);
+          // Sort animals by name
+          const sortedAnimals = [...data].sort((a, b) => a.name.localeCompare(b.name));
+          // @ts-ignore - setData is available in the hook
+          animals?.setData?.(sortedAnimals);
         },
         (error) => {
           console.error('Animals subscription error:', error);
+          // @ts-ignore - setError is available in the hook
+          animals?.setError?.(error.message);
         }
       );
     },
@@ -159,22 +104,17 @@ const FirestoreSafeSubscriptionExample: React.FC = () => {
     error: userError
   } = useFirestoreSubscription<User>(
     () => {
-      // Return unsubscribe function
-      return onSnapshot(
-        doc(db, 'users', userId),
-        (docSnapshot) => {
-          if (docSnapshot.exists()) {
-            const userData: User = {
-              uid: docSnapshot.id,
-              ...(docSnapshot.data() as Omit<User, 'uid'>)
-            };
-            console.log('User updated:', userData);
-          } else {
-            console.log('User document does not exist');
-          }
+      return safeSubscribeToDocument<User>(
+        `users/${userId}`,
+        (data) => {
+          console.log('User updated:', data);
+          // @ts-ignore - setData is available in the hook
+          userData?.setData?.(data);
         },
         (error) => {
           console.error('User subscription error:', error);
+          // @ts-ignore - setError is available in the hook
+          userData?.setError?.(error.message);
         }
       );
     },
@@ -192,25 +132,23 @@ const FirestoreSafeSubscriptionExample: React.FC = () => {
         return () => {}; // No-op if no userId
       }
 
-      const q = query(
+      // Create a query for favorite animals
+      const favoritesQuery = query(
         collection(db, 'animals'),
         where('likedBy', 'array-contains', userId)
       );
       
-      return onSnapshot(
-        q,
-        (snapshot) => {
-          const favoritesData: Animal[] = [];
-          snapshot.forEach((doc) => {
-            favoritesData.push({
-              id: doc.id,
-              ...(doc.data() as Omit<Animal, 'id'>)
-            });
-          });
-          console.log('Favorites updated:', favoritesData);
+      return safeSubscribeToQuery<Animal>(
+        favoritesQuery,
+        (data) => {
+          console.log('Favorites updated:', data);
+          // @ts-ignore - setData is available in the hook
+          favoriteAnimals?.setData?.(data);
         },
         (error) => {
           console.error('Favorites subscription error:', error);
+          // @ts-ignore - setError is available in the hook
+          favoriteAnimals?.setError?.(error.message);
         }
       );
     },

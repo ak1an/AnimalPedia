@@ -2,13 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom responsive breakpoints */
+@media (min-width: 400px) {
+  .xs\:grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+:root {
+  /* Light theme colors */
+  --bg-color: #ffffff;
+  --text-color: #1f2937;
+  --card-bg: #ffffff;
+  --border-color: #e5e7eb;
+  --button-bg: #22c55e;
+  --button-hover: #16a34a;
+  --header-bg: #ffffff;
+  --footer-bg: #f9fafb;
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  --input-text: #1f2937;
+  --modal-bg: #ffffff;
+  --link-color: #2563eb;
+}
+
+.dark-theme {
+  /* Dark theme colors */
+  --bg-color: #111827;
+  --text-color: #f9fafb;
+  --card-bg: #1f2937;
+  --border-color: #374151;
+  --button-bg: #22c55e;
+  --button-hover: #16a34a;
+  --header-bg: #1f2937;
+  --footer-bg: #1f2937;
+  --input-bg: #1f2937;
+  --input-border: #4b5563;
+  --input-text: #f9fafb;
+  --modal-bg: #1f2937;
+  --link-color: #60a5fa;
+}
+
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Add padding to body to account for fixed header */
@@ -16,6 +60,117 @@ body {
   padding-top: 4rem;
 }
 
+/* Nature-themed card styles with theme support */
+.nature-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.nature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+}
+
+.dark-theme .nature-card:hover {
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.4);
+}
+
+/* Nature-themed button styles with theme support */
+.nature-button {
+  background: linear-gradient(135deg, var(--button-bg) 0%, var(--button-hover) 100%);
+  color: white;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  transition: all 0.3s ease, background 0.3s ease, box-shadow 0.3s ease, transform 0.3s ease;
+  box-shadow: 0 4px 6px rgba(34, 197, 94, 0.2);
+}
+
+.nature-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(34, 197, 94, 0.3);
+}
+
+.nature-button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(34, 197, 94, 0.2);
+}
+
+/* Nature-themed text styles */
+.nature-text {
+  color: #1e3a8a;
+}
+
+.dark-theme .nature-text {
+  color: #93c5fd;
+}
+
+.nature-text-light {
+  color: #312e81;
+}
+
+.dark-theme .nature-text-light {
+  color: #bfdbfe;
+}
+
+/* Green accent elements */
+.green-accent {
+  color: #22c55e;
+}
+
+.green-bg {
+  background-color: #dcfce7;
+}
+
+.dark-theme .green-bg {
+  background-color: #065f46;
+}
+
+.green-border {
+  border-color: #bbf7d0;
+}
+
+.dark-theme .green-border {
+  border-color: #047857;
+}
+
+/* Header styles */
+.header {
+  background-color: var(--header-bg);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Footer styles */
+.footer {
+  background-color: var(--footer-bg);
+  transition: background-color 0.3s ease;
+}
+
+/* Input styles */
+.input-field {
+  background-color: var(--input-bg);
+  border: 1px solid var(--input-border);
+  color: var(--input-text);
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* Link styles */
+.link {
+  color: var(--link-color);
+  transition: color 0.3s ease;
+}
+
+/* Modal styles */
+.modal {
+  background-color: var(--modal-bg);
+  transition: background-color 0.3s ease;
+}
+
+/* Animations */
 @keyframes fade-in-up {
   0% {
     opacity: 0;

@@ -22,11 +22,11 @@ const Animals: React.FC = () => {
   const animals = allAnimals.slice(0, 5);
 
   return (
-    <section className="py-12 bg-white dark:bg-gray-900 transition-colors duration-300">
+    <section className="py-12">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">Животные</h2>
-          <p className="text-gray-600 dark:text-gray-400">
+          <h2 className="text-3xl font-bold nature-text mb-2">Животные</h2>
+          <p className="nature-text-light">
             Познакомьтесь с удивительным миром животных
           </p>
         </div>
@@ -35,18 +35,18 @@ const Animals: React.FC = () => {
           {animals.map((animal) => (
             <div 
               key={animal.id}
-              className="bg-white dark:bg-gray-800 rounded-2xl shadow-md overflow-hidden transform transition-all duration-300 hover:scale-105 hover:shadow-xl flex flex-col h-full"
+              className="nature-card transform transition-all duration-300 hover:scale-105 flex flex-col h-full"
             >
               <div className="relative">
                 <img 
                   src={animal.photo} 
                   alt={animal.name} 
-                  className="w-full h-48 object-cover"
+                  className="w-full h-48 object-cover rounded-t-2xl"
                 />
               </div>
               
               <div className="p-4 flex-grow flex flex-col">
-                <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-1">{animal.name}</h3>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{animal.name}</h3>
                 <p className="text-gray-600 dark:text-gray-400 text-sm flex-grow">{animal.habitat}</p>
               </div>
             </div>
@@ -56,7 +56,7 @@ const Animals: React.FC = () => {
         <div className="text-center mt-8">
           <Link 
             to="/categories"
-            className="inline-block px-6 py-3 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+            className="nature-button inline-block"
           >
             Посмотреть больше
           </Link>

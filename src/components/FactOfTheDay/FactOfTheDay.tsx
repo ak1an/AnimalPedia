@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 
 // Define the fact item type
 interface FactItem {
@@ -8,11 +10,18 @@ interface FactItem {
   imageUrl: string;
 }
 
+// Define the stored data type
+interface StoredFactData {
+  date: string;
+  fact: FactItem;
+}
+
 /**
  * FactOfTheDay component for AnimalPedia homepage
  * Displays a daily animal fact with automatic updates
  */
 const FactOfTheDay: React.FC = () => {
+  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const [fact, setFact] = useState<FactItem | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -98,28 +107,53 @@ const FactOfTheDay: React.FC = () => {
     });
   };
 
-  // Function to update fact date to current date
-  const updateFactDate = (factItem: FactItem): FactItem => {
-    const currentDate = getCurrentDate();
-    return {
-      ...factItem,
-      date: currentDate
-    };
-  };
-
   // Effect to load fact on component mount
   useEffect(() => {
     const loadFact = async () => {
       try {
         setLoading(true);
+        
+        // Check if we have stored data for today
+        const storedData = localStorage.getItem('factOfTheDay');
+        const currentDate = getCurrentDate();
+        
+        if (storedData) {
+          const parsedData: StoredFactData = JSON.parse(storedData);
+          
+          // If stored data is from today, use it
+          if (parsedData.date === currentDate) {
+            setFact(parsedData.fact);
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // If no stored data or data is outdated, fetch new fact
         const factData = await fetchFact();
-        const updatedFact = updateFactDate(factData);
+        
+        // Update fact date to current date
+        const updatedFact = {
+          ...factData,
+          date: currentDate
+        };
+        
+        // Store the new fact with today's date
+        const dataToStore: StoredFactData = {
+          date: currentDate,
+          fact: updatedFact
+        };
+        localStorage.setItem('factOfTheDay', JSON.stringify(dataToStore));
+        
         setFact(updatedFact);
       } catch (error) {
         console.error("Failed to load fact:", error);
         // Fallback to mock data if API fails
         const randomFact = selectRandomFact(mockFactsData);
-        const updatedFact = updateFactDate(randomFact);
+        const currentDate = getCurrentDate();
+        const updatedFact = {
+          ...randomFact,
+          date: currentDate
+        };
         setFact(updatedFact);
       } finally {
         setLoading(false);
@@ -141,22 +175,22 @@ const FactOfTheDay: React.FC = () => {
 
   if (loading) {
     return (
-      <section className="py-12 bg-white dark:bg-gray-900 transition-colors duration-300">
+      <section className={`py-12 transition-colors duration-300 ease-in-out ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">Интересный факт дня</h2>
+            <h2 className={`text-3xl font-bold mb-2 transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-white' : 'nature-text'}`}>Интересный факт дня</h2>
           </div>
           
-          <div className="max-w-4xl mx-auto bg-gradient-to-r from-amber-50 to-green-50 dark:from-gray-800 dark:to-gray-800 rounded-xl shadow-lg overflow-hidden animate-pulse">
+          <div className="max-w-4xl mx-auto nature-card animate-pulse">
             <div className="md:flex">
               <div className="md:w-2/5">
-                <div className="bg-gray-300 dark:bg-gray-700 h-64 w-full"></div>
+                <div className={`h-64 w-full rounded-t-lg md:rounded-l-lg md:rounded-t-none ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
               </div>
               <div className="md:w-3/5 p-8 flex flex-col justify-center">
-                <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded w-3/4 mb-6"></div>
-                <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full mb-4"></div>
-                <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-2/3 mb-8"></div>
-                <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-1/3"></div>
+                <div className={`h-6 rounded w-3/4 mb-6 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                <div className={`h-4 rounded w-full mb-4 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                <div className={`h-4 rounded w-2/3 mb-8 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                <div className={`h-4 rounded w-1/3 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
               </div>
             </div>
           </div>
@@ -166,30 +200,30 @@ const FactOfTheDay: React.FC = () => {
   }
 
   return (
-    <section className="py-12 bg-white dark:bg-gray-900 transition-colors duration-300">
+    <section className={`py-12 transition-colors duration-300 ease-in-out ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">Интересный факт дня</h2>
+          <h2 className={`text-3xl font-bold mb-2 transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-white' : 'nature-text'}`}>Интересный факт дня</h2>
         </div>
         
-        <div className="max-w-4xl mx-auto bg-gradient-to-r from-amber-50 to-green-50 dark:from-gray-800 dark:to-gray-800 rounded-xl shadow-lg overflow-hidden animate-fade-in">
+        <div className="max-w-4xl mx-auto nature-card animate-fade-in">
           <div className="md:flex">
             <div className="md:w-2/5">
               <img 
                 src={fact?.imageUrl} 
                 alt="Animal fact illustration" 
-                className="w-full h-64 md:h-full object-cover animate-fade-in-up"
+                className="w-full h-64 md:h-full object-cover rounded-t-lg md:rounded-l-lg md:rounded-t-none animate-fade-in-up"
               />
             </div>
             <div className="md:w-3/5 p-8 flex flex-col justify-center">
-              <p className="text-gray-700 dark:text-gray-300 text-lg mb-6 animate-fade-in-up delay-100">
+              <p className={`text-lg mb-6 animate-fade-in-up delay-100 transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-gray-300' : 'text-gray-700'}`}>
                 {fact?.text}
               </p>
-              <div className="flex items-center animate-fade-in-up delay-200">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-amber-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className={`flex items-center animate-fade-in-up delay-200 transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
-                <span className="text-gray-600 dark:text-gray-400">
+                <span>
                   {fact && formatDate(fact.date)}
                 </span>
               </div>

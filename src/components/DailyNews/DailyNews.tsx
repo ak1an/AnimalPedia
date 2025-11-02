@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import { RootState } from '../../store';
 
 // Define the news item type
 interface NewsItem {
@@ -10,11 +12,18 @@ interface NewsItem {
   imageUrl: string;
 }
 
+// Define the stored data type
+interface StoredNewsData {
+  date: string;
+  news: NewsItem[];
+}
+
 /**
  * DailyNews component for AnimalPedia homepage
  * Displays daily animal and nature news with automatic updates
  */
 const DailyNews: React.FC = () => {
+  const isDarkMode = useSelector((state: RootState) => state.theme.isDarkMode);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
@@ -102,29 +111,54 @@ const DailyNews: React.FC = () => {
     });
   };
 
-  // Function to update news dates to current date
-  const updateNewsDates = (newsArray: NewsItem[]): NewsItem[] => {
-    const currentDate = getCurrentDate();
-    return newsArray.map(newsItem => ({
-      ...newsItem,
-      date: currentDate
-    }));
-  };
-
   // Effect to load news on component mount
   useEffect(() => {
     const loadNews = async () => {
       try {
         setLoading(true);
+        
+        // Check if we have stored data for today
+        const storedData = localStorage.getItem('dailyNews');
+        const currentDate = getCurrentDate();
+        
+        if (storedData) {
+          const parsedData: StoredNewsData = JSON.parse(storedData);
+          
+          // If stored data is from today, use it
+          if (parsedData.date === currentDate) {
+            setNews(parsedData.news);
+            setLoading(false);
+            return;
+          }
+        }
+        
+        // If no stored data or data is outdated, fetch new news
         const newsData = await fetchNews();
         const randomNews = selectRandomNews(newsData, 3);
-        const updatedNews = updateNewsDates(randomNews);
+        
+        // Update news dates to current date
+        const updatedNews = randomNews.map(newsItem => ({
+          ...newsItem,
+          date: currentDate
+        }));
+        
+        // Store the new news with today's date
+        const dataToStore: StoredNewsData = {
+          date: currentDate,
+          news: updatedNews
+        };
+        localStorage.setItem('dailyNews', JSON.stringify(dataToStore));
+        
         setNews(updatedNews);
       } catch (error) {
         console.error("Failed to load news:", error);
         // Fallback to mock data if API fails
         const randomNews = selectRandomNews(mockNewsData, 3);
-        const updatedNews = updateNewsDates(randomNews);
+        const currentDate = getCurrentDate();
+        const updatedNews = randomNews.map(newsItem => ({
+          ...newsItem,
+          date: currentDate
+        }));
         setNews(updatedNews);
       } finally {
         setLoading(false);
@@ -162,23 +196,23 @@ const DailyNews: React.FC = () => {
 
   if (loading) {
     return (
-      <section className="py-12 bg-white dark:bg-gray-900 transition-colors duration-300">
+      <section className={`py-12 transition-colors duration-300 ease-in-out ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-10">
-            <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">Новости дня</h2>
+            <h2 className={`text-3xl font-bold mb-2 transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-white' : 'nature-text'}`}>Новости дня</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3].map((item) => (
               <div 
                 key={item} 
-                className="bg-gray-100 dark:bg-gray-800 rounded-xl shadow-md overflow-hidden animate-pulse flex flex-col h-full"
+                className="nature-card animate-pulse flex flex-col h-full"
               >
-                <div className="bg-gray-300 dark:bg-gray-700 h-48 w-full"></div>
+                <div className={`h-48 w-full rounded-t-lg ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
                 <div className="p-6 flex-grow flex flex-col">
-                  <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
-                  <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-full mb-2 flex-grow"></div>
-                  <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-2/3 mb-4"></div>
-                  <div className="h-10 bg-gray-300 dark:bg-gray-700 rounded w-1/2 mt-auto"></div>
+                  <div className={`h-6 rounded w-3/4 mb-4 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                  <div className={`h-4 rounded w-full mb-2 flex-grow ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                  <div className={`h-4 rounded w-2/3 mb-4 ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
+                  <div className={`h-10 rounded w-1/2 mt-auto ${isDarkMode ? 'bg-gray-700' : 'bg-gray-200'}`}></div>
                 </div>
               </div>
             ))}
@@ -189,17 +223,17 @@ const DailyNews: React.FC = () => {
   }
 
   return (
-    <section className="py-12 bg-white dark:bg-gray-900 transition-colors duration-300">
+    <section className={`py-12 transition-colors duration-300 ease-in-out ${isDarkMode ? 'bg-gray-900' : 'bg-white'}`}>
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <h2 className="text-3xl font-bold text-gray-800 dark:text-white mb-2">Новости дня</h2>
+          <h2 className={`text-3xl font-bold mb-2 transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-white' : 'nature-text'}`}>Новости дня</h2>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {news.map((item, index) => (
             <div 
               key={item.id}
-              className={`bg-gradient-to-br from-green-50 to-amber-50 dark:from-gray-800 dark:to-gray-800 rounded-xl shadow-lg overflow-hidden transform transition-all duration-500 ease-out hover:shadow-xl hover:-translate-y-1 flex flex-col h-full
+              className={`nature-card flex flex-col h-full
                 ${index === 0 ? 'animate-fade-in-up delay-100' : 
                   index === 1 ? 'animate-fade-in-up delay-200' : 
                   'animate-fade-in-up delay-300'}`}
@@ -208,19 +242,19 @@ const DailyNews: React.FC = () => {
                 <img 
                   src={item.imageUrl} 
                   alt={item.title} 
-                  className="w-full h-48 object-cover"
+                  className="w-full h-48 object-cover rounded-t-lg"
                 />
-                <div className="absolute top-4 right-4 bg-amber-500 text-white text-sm font-semibold px-3 py-1 rounded-full">
+                <div className="absolute top-4 right-4 bg-green-500 text-white text-sm font-semibold px-3 py-1 rounded-full shadow-md">
                   {formatDate(item.date)}
                 </div>
               </div>
               
               <div className="p-6 flex-grow flex flex-col">
-                <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-3">{item.title}</h3>
-                <p className="text-gray-600 dark:text-gray-300 mb-4 flex-grow">{item.excerpt}</p>
+                <h3 className={`text-xl font-bold mb-3 transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{item.title}</h3>
+                <p className={`mb-4 flex-grow transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{item.excerpt}</p>
                 <button 
                   onClick={() => openModal(item)}
-                  className="text-green-700 dark:text-green-400 font-semibold hover:text-green-800 dark:hover:text-green-300 transition-colors mt-auto w-fit"
+                  className="nature-button inline-block"
                 >
                   Читать далее →
                 </button>
@@ -233,19 +267,23 @@ const DailyNews: React.FC = () => {
       {/* Modal for displaying full news */}
       {isModalOpen && selectedNews && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-modal-pop">
+          <div className="nature-card max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-modal-pop rounded-2xl">
             <div className="relative">
               <img 
                 src={selectedNews.imageUrl} 
                 alt={selectedNews.title} 
-                className="w-full h-64 object-cover"
+                className="w-full h-64 object-cover rounded-t-2xl"
               />
-              <div className="absolute top-4 right-4 bg-amber-500 text-white text-sm font-semibold px-3 py-1 rounded-full">
+              <div className="absolute top-4 right-4 bg-green-500 text-white text-sm font-semibold px-3 py-1 rounded-full shadow-md">
                 {formatDate(selectedNews.date)}
               </div>
               <button 
                 onClick={closeModal}
-                className="absolute top-4 left-4 bg-white dark:bg-gray-700 text-gray-800 dark:text-white rounded-full p-2 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                className={`absolute top-4 left-4 rounded-full p-2 shadow-lg hover:bg-opacity-80 transition-colors duration-200 ${
+                  isDarkMode 
+                    ? 'bg-gray-700 text-white' 
+                    : 'bg-white text-gray-800'
+                }`}
                 aria-label="Закрыть"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -255,8 +293,8 @@ const DailyNews: React.FC = () => {
             </div>
             
             <div className="p-6">
-              <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">{selectedNews.title}</h3>
-              <p className="text-gray-600 dark:text-gray-300 whitespace-pre-line">{selectedNews.content}</p>
+              <h3 className={`text-2xl font-bold mb-4 transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>{selectedNews.title}</h3>
+              <p className={`transition-colors duration-300 ease-in-out ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>{selectedNews.content}</p>
             </div>
           </div>
         </div>

@@ -1,19 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit';
 import themeReducer from './slices/themeSlice';
-import userReducer from './slices/userSlice';
 import searchReducer from './slices/searchSlice';
-import categoryReducer from './slices/categorySlice';
 import recentlyViewedReducer from './slices/recentlyViewedSlice';
-import aboutReducer from './slices/aboutSlice';
+import userReducer from './slices/userSlice';
 
 export const store = configureStore({
   reducer: {
     theme: themeReducer,
-    user: userReducer,
     search: searchReducer,
-    category: categoryReducer,
     recentlyViewed: recentlyViewedReducer,
-    about: aboutReducer,
+    user: userReducer,
   },
 });
 

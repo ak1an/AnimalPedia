@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { collection, addDoc, onSnapshot, query, orderBy, serverTimestamp, doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import React, { useState, useEffect } from 'react';
+import { collection, addDoc, query, orderBy, serverTimestamp, doc, getDoc, updateDoc, increment } from 'firebase/firestore';
 import { db, auth } from '../../firebase/config';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { safeSubscribeToCollection, safeSubscribeToQuery } from '../../utils/firestoreSafeSubscriptions';
 
 interface Review {
   id: string;
@@ -67,38 +68,6 @@ export async function addReview(username: string, text: string, rating: number) 
   }
 }
 
-// Function to get reviews from Firestore
-export function getReviews(callback: (reviews: Review[]) => void) {
-  try {
-    const q = query(collection(db, 'reviews'), orderBy('createdAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (querySnapshot) => {
-      const reviews: Review[] = [];
-      querySnapshot.forEach((doc) => {
-        const reviewData = doc.data();
-        reviews.push({
-          id: doc.id,
-          userId: reviewData.userId || '',
-          username: reviewData.username || '',
-          avatarUrl: reviewData.avatarUrl || '',
-          text: reviewData.text || '',
-          rating: reviewData.rating || 0,
-          likes: reviewData.likes || 0,
-          createdAt: reviewData.createdAt
-        });
-      });
-      callback(reviews);
-    }, (error) => {
-      // Error handler for the subscription
-      console.error('Firestore subscription error:', error);
-    });
-    
-    return unsubscribe;
-  } catch (error: any) {
-    console.error('Error getting reviews: ', error);
-    return null;
-  }
-}
-
 // Function to like a review
 export async function likeReview(reviewId: string) {
   try {
@@ -131,54 +100,52 @@ const ReviewsPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [likedReviews, setLikedReviews] = useState<Set<string>>(new Set());
-  const isMountedRef = useRef(true);
 
   // Fetch reviews in real-time
   useEffect(() => {
-    isMountedRef.current = true;
+    // Create a query for reviews ordered by creation date
+    const reviewsQuery = query(collection(db, 'reviews'), orderBy('createdAt', 'desc'));
     
-    const unsubscribe = getReviews((reviewsData) => {
-      // Check if component is still mounted
-      if (!isMountedRef.current) return;
-      
-      // For each review, try to fetch the user's avatar from their profile
-      const reviewsWithAvatars = reviewsData.map(async (review) => {
-        if (review.userId) {
-          try {
-            const userDoc = await getDoc(doc(db, 'users', review.userId));
-            if (userDoc.exists()) {
-              const userData = userDoc.data();
-              return {
-                ...review,
-                avatarUrl: userData.avatarUrl || review.avatarUrl || "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"
-              };
+    // Subscribe to the reviews collection using safe subscription
+    const unsubscribe = safeSubscribeToQuery(
+      reviewsQuery,
+      async (reviewsData: any[]) => {
+        // For each review, try to fetch the user's avatar from their profile
+        const reviewsWithAvatars = reviewsData.map(async (review) => {
+          if (review.userId) {
+            try {
+              const userDoc = await getDoc(doc(db, 'users', review.userId));
+              if (userDoc.exists()) {
+                const userData = userDoc.data();
+                return {
+                  ...review,
+                  avatarUrl: userData.avatarUrl || review.avatarUrl || "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"
+                };
+              }
+            } catch (error) {
+              console.error('Error fetching user data:', error);
             }
-          } catch (error) {
-            console.error('Error fetching user data:', error);
           }
-        }
-        return {
-          ...review,
-          avatarUrl: review.avatarUrl || "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"
-        };
-      });
-      
-      Promise.all(reviewsWithAvatars).then((updatedReviews) => {
-        // Only update state if component is still mounted
-        if (isMountedRef.current) {
+          return {
+            ...review,
+            avatarUrl: review.avatarUrl || "https://upload.wikimedia.org/wikipedia/commons/9/99/Sample_User_Icon.png"
+          };
+        });
+        
+        Promise.all(reviewsWithAvatars).then((updatedReviews) => {
           setReviews(updatedReviews);
           setLoading(false);
-        }
-      });
-    });
+        });
+      },
+      (error) => {
+        // Error handler for the subscription
+        console.error('Firestore subscription error:', error);
+        setLoading(false);
+      }
+    );
 
     // Cleanup function
-    return () => {
-      isMountedRef.current = false;
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
+    return () => unsubscribe();
   }, []);
 
   // Function to handle liking a review

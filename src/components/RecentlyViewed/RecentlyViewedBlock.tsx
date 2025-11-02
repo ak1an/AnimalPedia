@@ -61,10 +61,10 @@ const RecentlyViewedBlock: React.FC = () => {
   }
 
   return (
-    <section className="py-12 bg-white dark:bg-gray-900 transition-colors duration-300">
+    <section className="py-12">
       <div className="container mx-auto px-4">
         <motion.h2 
-          className="text-3xl font-bold text-gray-800 dark:text-white mb-8 text-center"
+          className="text-3xl font-bold nature-text mb-8 text-center"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -77,7 +77,7 @@ const RecentlyViewedBlock: React.FC = () => {
             {[1, 2, 3, 4, 5].map((item) => (
               <div 
                 key={item} 
-                className="rounded-2xl shadow-xl bg-white animate-pulse"
+                className="nature-card animate-pulse"
               >
                 <div className="bg-gray-300 dark:bg-gray-700 h-48 w-full rounded-t-2xl"></div>
                 <div className="p-5">
